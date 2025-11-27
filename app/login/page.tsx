@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,14 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
-  const { login } = useAuth()
+  const { login, isAuthenticated } = useAuth()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/')
+    }
+  }, [isAuthenticated, router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -56,14 +63,20 @@ export default function LoginPage() {
         let redirectPath = redirectTo
         
         if (result.user) {
+          console.log('User logged in:', result.user.email)
           // Check if user email contains admin or is the admin email
           if (result.user.email === 'admin@alldeals.com' || result.user.email.includes('admin')) {
             redirectPath = '/admin/dashboard'
+            console.log('Admin detected, redirecting to:', redirectPath)
           }
         }
         
-        // Immediate redirect without delay
-        router.push(redirectPath)
+        console.log('Final redirect path:', redirectPath)
+        
+        // Use replace instead of push and add small delay for state to settle
+        setTimeout(() => {
+          router.replace(redirectPath)
+        }, 500)
       } else {
         toast({
           title: 'Error',
