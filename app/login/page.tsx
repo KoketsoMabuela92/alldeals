@@ -44,34 +44,26 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const success = await login(formData.email, formData.password)
+      const result = await login(formData.email, formData.password)
       
-      if (success) {
+      if (result.success) {
         toast({
           title: 'Success',
           description: 'Logged in successfully!'
         })
         
         // Check if user is admin and redirect accordingly
-        const userData = localStorage.getItem('user_data')
         let redirectPath = redirectTo
         
-        if (userData) {
-          try {
-            const user = JSON.parse(userData)
-            // Check if user email contains admin or is the admin email
-            if (user.email === 'admin@alldeals.com' || user.email.includes('admin')) {
-              redirectPath = '/admin/dashboard'
-            }
-          } catch (error) {
-            console.error('Error parsing user data:', error)
+        if (result.user) {
+          // Check if user email contains admin or is the admin email
+          if (result.user.email === 'admin@alldeals.com' || result.user.email.includes('admin')) {
+            redirectPath = '/admin/dashboard'
           }
         }
         
-        // Add a small delay to ensure auth state is updated
-        setTimeout(() => {
-          router.push(redirectPath)
-        }, 100)
+        // Immediate redirect without delay
+        router.push(redirectPath)
       } else {
         toast({
           title: 'Error',
