@@ -20,14 +20,19 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
-  const { login, isAuthenticated } = useAuth()
+  const { login, isAuthenticated, user } = useAuth()
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/')
+    if (isAuthenticated && user) {
+      // Check if admin and redirect accordingly
+      if (user.email === 'admin@alldeals.com' || user.email.includes('admin')) {
+        router.replace('/admin/dashboard')
+      } else {
+        router.replace('/')
+      }
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, user, router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -60,14 +65,17 @@ export default function LoginPage() {
         })
         
         // Check if user is admin and redirect accordingly
-        let redirectPath = redirectTo
+        let redirectPath = '/'
         
         if (result.user) {
           console.log('User logged in:', result.user.email)
-          // Check if user email contains admin or is the admin email
+          // Check if user email contains admin or is the admin email - PRIORITY OVER redirectTo
           if (result.user.email === 'admin@alldeals.com' || result.user.email.includes('admin')) {
             redirectPath = '/admin/dashboard'
             console.log('Admin detected, redirecting to:', redirectPath)
+          } else {
+            // Only use redirectTo for non-admin users
+            redirectPath = redirectTo
           }
         }
         
