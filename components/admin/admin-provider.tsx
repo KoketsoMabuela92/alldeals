@@ -28,8 +28,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       const token = localStorage.getItem('admin_token')
       
       if (!token) {
-        if (pathname !== '/admin/login') {
-          router.push('/admin/login')
+        if (pathname !== '/login') {
+          router.push('/login')
         }
         setIsLoading(false)
         return
@@ -47,20 +47,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           const userData = await response.json()
           setUser(userData.user)
           
-          if (pathname === '/admin/login') {
+          if (pathname === '/login') {
             router.push('/admin/dashboard')
           }
         } else {
           localStorage.removeItem('admin_token')
-          if (pathname !== '/admin/login') {
-            router.push('/admin/login')
+          if (pathname !== '/login') {
+            router.push('/login')
           }
         }
       } catch (error) {
         console.error('Auth check failed:', error)
         localStorage.removeItem('admin_token')
-        if (pathname !== '/admin/login') {
-          router.push('/admin/login')
+        if (pathname !== '/login') {
+          router.push('/login')
         }
       } finally {
         setIsLoading(false)
@@ -73,7 +73,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem('admin_token')
     setUser(null)
-    router.push('/admin/login')
+    router.push('/login')
   }
 
   if (isLoading) {
