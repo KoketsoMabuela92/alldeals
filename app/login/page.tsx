@@ -32,7 +32,7 @@ export default function LoginPage() {
         router.replace('/')
       }
     }
-  }, [isAuthenticated, user, router])
+  }, [isAuthenticated, user]) // Remove router from dependencies
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({

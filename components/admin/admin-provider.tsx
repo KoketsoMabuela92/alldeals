@@ -20,16 +20,21 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined)
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [hasRedirected, setHasRedirected] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('admin_token')
+      // Prevent multiple redirects
+      if (hasRedirected) return
+      
+      const token = localStorage.getItem('user_token')
       
       if (!token) {
         if (pathname !== '/login') {
-          router.push('/login')
+          setHasRedirected(true)
+          router.replace('/login')
         }
         setIsLoading(false)
         return
@@ -48,19 +53,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           setUser(userData.user)
           
           if (pathname === '/login') {
-            router.push('/admin/dashboard')
+            setHasRedirected(true)
+            router.replace('/admin/dashboard')
           }
         } else {
-          localStorage.removeItem('admin_token')
+          localStorage.removeItem('user_token')
+          localStorage.removeItem('user_data')
           if (pathname !== '/login') {
-            router.push('/login')
+            setHasRedirected(true)
+            router.replace('/login')
           }
         }
       } catch (error) {
         console.error('Auth check failed:', error)
-        localStorage.removeItem('admin_token')
+        localStorage.removeItem('user_token')
+        localStorage.removeItem('user_data')
         if (pathname !== '/login') {
-          router.push('/login')
+          setHasRedirected(true)
+          router.replace('/login')
         }
       } finally {
         setIsLoading(false)
@@ -68,10 +78,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
 
     checkAuth()
-  }, [pathname, router])
+  }, []) // Remove pathname and router from dependencies to prevent infinite loop
 
   const logout = () => {
-    localStorage.removeItem('admin_token')
+    localStorage.removeItem('user_token')
+    localStorage.removeItem('user_data')
     setUser(null)
     router.push('/login')
   }
