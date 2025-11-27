@@ -1,11 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production'
 
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization')
+    const authHeader = request.headers.get('authorization')
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
