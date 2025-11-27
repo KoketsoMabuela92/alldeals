@@ -9,17 +9,23 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin token
+    // Verify user token and check if admin
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const token = authHeader.substring(7)
+    let decoded
     try {
-      jwt.verify(token, JWT_SECRET)
+      decoded = jwt.verify(token, JWT_SECRET) as any
     } catch {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // Check if user is admin
+    if (decoded.email !== 'admin@alldeals.com' && !decoded.email?.includes('admin')) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
     // Get dashboard statistics
