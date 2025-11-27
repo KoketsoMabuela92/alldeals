@@ -54,7 +54,7 @@ export default function NewProductPage() {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch('/api/admin/categories', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -161,7 +161,7 @@ export default function NewProductPage() {
       // Filter out empty images
       const validImages = images.filter(img => img.url.trim() !== '')
 
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch('/api/admin/products', {
         method: 'POST',
         headers: {

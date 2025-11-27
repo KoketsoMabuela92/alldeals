@@ -91,11 +91,26 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    console.log('POST /api/admin/products - Starting product creation')
+    
     // Verify admin token
     const authHeader = req.headers.get('authorization')
-    verifyAdminToken(authHeader)
+    console.log('Auth header present:', !!authHeader)
+    
+    try {
+      verifyAdminToken(authHeader)
+      console.log('Admin token verified successfully')
+    } catch (authError) {
+      console.error('Auth verification failed:', authError)
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
 
     const body = await req.json()
+    console.log('Request body:', body)
+    
     const {
       name,
       description,
@@ -109,21 +124,72 @@ export async function POST(req: Request) {
 
     // Validate required fields
     if (!name || !price || !categoryId || stock === undefined) {
+      console.log('Validation failed - Missing required fields:', {
+        name: !!name,
+        price: !!price,
+        categoryId: !!categoryId,
+        stock: stock !== undefined
+      })
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: name, price, categoryId, and stock are required' },
         { status: 400 }
       )
     }
+
+    // Validate data types
+    const parsedPrice = parseFloat(price)
+    const parsedStock = parseInt(stock)
+    const parsedOriginalPrice = originalPrice ? parseFloat(originalPrice) : null
+
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      console.log('Invalid price:', price)
+      return NextResponse.json(
+        { error: 'Price must be a valid positive number' },
+        { status: 400 }
+      )
+    }
+
+    if (isNaN(parsedStock) || parsedStock < 0) {
+      console.log('Invalid stock:', stock)
+      return NextResponse.json(
+        { error: 'Stock must be a valid non-negative number' },
+        { status: 400 }
+      )
+    }
+
+    // Verify category exists
+    console.log('Checking if category exists:', categoryId)
+    const categoryExists = await prisma.category.findUnique({
+      where: { id: categoryId }
+    })
+
+    if (!categoryExists) {
+      console.log('Category not found:', categoryId)
+      return NextResponse.json(
+        { error: 'Category not found' },
+        { status: 400 }
+      )
+    }
+
+    console.log('Creating product with data:', {
+      name,
+      description: description || '',
+      price: parsedPrice,
+      originalPrice: parsedOriginalPrice,
+      categoryId,
+      stock: parsedStock,
+      sku: sku || `SKU-${Date.now()}`
+    })
 
     // Create product
     const product = await prisma.product.create({
       data: {
         name,
         description: description || '',
-        price: parseFloat(price),
-        originalPrice: originalPrice ? parseFloat(originalPrice) : null,
+        price: parsedPrice,
+        originalPrice: parsedOriginalPrice,
         categoryId,
-        stock: parseInt(stock),
+        stock: parsedStock,
         sku: sku || `SKU-${Date.now()}`
       },
       include: {
@@ -132,25 +198,69 @@ export async function POST(req: Request) {
       }
     })
 
+    console.log('Product created successfully:', product.id)
+
     // Create product images if provided
     if (images && images.length > 0) {
-      await prisma.productImage.createMany({
-        data: images.map((image: any, index: number) => ({
-          productId: product.id,
-          url: image.url,
-          altText: image.altText || product.name,
-          isPrimary: index === 0,
-          sortOrder: index
-        }))
-      })
+      console.log('Creating product images:', images.length)
+      try {
+        await prisma.productImage.createMany({
+          data: images.map((image: any, index: number) => ({
+            productId: product.id,
+            url: image.url,
+            altText: image.altText || product.name,
+            isPrimary: index === 0,
+            sortOrder: index
+          }))
+        })
+        console.log('Product images created successfully')
+      } catch (imageError) {
+        console.error('Failed to create product images:', imageError)
+        // Don't fail the entire request if images fail
+      }
     }
 
+    console.log('Product creation completed successfully')
     return NextResponse.json({ product }, { status: 201 })
 
   } catch (error) {
-    console.error('Product creation error:', error)
+    console.error('Product creation error - Full details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+      error
+    })
+    
+    // Check if it's a database connection error
+    if (error instanceof Error && error.message.includes('connect')) {
+      return NextResponse.json(
+        { error: 'Database connection failed', details: error.message },
+        { status: 500 }
+      )
+    }
+    
+    // Check if it's a Prisma error
+    if (error instanceof Error && error.message.includes('Prisma')) {
+      return NextResponse.json(
+        { error: 'Database operation failed', details: error.message },
+        { status: 500 }
+      )
+    }
+    
+    // Check for unique constraint violations
+    if (error instanceof Error && error.message.includes('Unique constraint')) {
+      return NextResponse.json(
+        { error: 'Product with this SKU already exists', details: error.message },
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create product' },
+      { 
+        error: 'Failed to create product', 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     )
   }

@@ -40,7 +40,7 @@ export default function AdminCategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch('/api/admin/categories', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -76,7 +76,7 @@ export default function AdminCategoriesPage() {
     }
 
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const url = editingCategory 
         ? `/api/admin/categories/${editingCategory.id}`
         : '/api/admin/categories'
@@ -150,7 +150,7 @@ export default function AdminCategoriesPage() {
     if (!confirm('Are you sure you want to delete this category?')) return
 
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch(`/api/admin/categories/${categoryId}`, {
         method: 'DELETE',
         headers: {

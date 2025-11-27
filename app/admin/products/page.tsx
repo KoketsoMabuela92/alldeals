@@ -59,7 +59,7 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -97,7 +97,7 @@ export default function AdminProductsPage() {
     if (!confirm('Are you sure you want to delete this product?')) return
 
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
@@ -128,7 +128,7 @@ export default function AdminProductsPage() {
     if (!confirm(`Are you sure you want to delete ${selectedProducts.length} products?`)) return
 
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch('/api/admin/products/bulk-delete', {
         method: 'POST',
         headers: {

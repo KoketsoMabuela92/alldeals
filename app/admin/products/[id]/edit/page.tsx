@@ -72,7 +72,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch('/api/admin/categories', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -90,7 +90,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
 
   const fetchProduct = async () => {
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch(`/api/admin/products/${params.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -231,7 +231,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       // Filter out empty images
       const validImages = images.filter(img => img.url.trim() !== '')
 
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch(`/api/admin/products/${params.id}`, {
         method: 'PUT',
         headers: {
@@ -271,7 +271,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     }
 
     try {
-      const token = localStorage.getItem('admin_token')
+      const token = localStorage.getItem('user_token')
       const response = await fetch(`/api/admin/products/${params.id}`, {
         method: 'DELETE',
         headers: {
