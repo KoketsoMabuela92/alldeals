@@ -15,10 +15,8 @@ export function SettingsDebug() {
     setIsRefreshing(false)
   }
 
-  // Only show in development
-  if (process.env.NODE_ENV !== 'development') {
-    return null
-  }
+  // Never show in production - always return null
+  return null
 
   return (
     <div className="fixed bottom-4 left-4 z-50 bg-white border border-gray-300 rounded-lg p-4 shadow-lg max-w-sm">

@@ -25,7 +25,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       })
       if (response.ok) {
         const data = await response.json()
-        console.log('Settings loaded:', data.settings)
         setSettings({ ...defaultSettings, ...data.settings })
       }
     } catch (error) {
