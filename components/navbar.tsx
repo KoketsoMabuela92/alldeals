@@ -138,31 +138,78 @@ export function Navbar() {
             <Link
               href="/products"
               className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
+              onClick={() => setIsMenuOpen(false)}
             >
               Products
             </Link>
             <Link
               href="/categories"
               className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"
+              onClick={() => setIsMenuOpen(false)}
             >
               Categories
             </Link>
             <Link
               href="/sale"
               className="text-red-600 hover:text-red-700 block px-3 py-2 rounded-md text-base font-bold"
+              onClick={() => setIsMenuOpen(false)}
             >
               🔥 Sale
             </Link>
-            <div className="flex items-center space-x-4 px-3 py-2">
-              <Button variant="ghost" size="icon">
-                <Heart className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <ShoppingCart className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
+            <div className="flex flex-col space-y-4 px-3 py-4 border-t border-gray-200 mt-2">
+              <div className="flex space-x-4">
+                <Link href="/wishlist" onClick={() => setIsMenuOpen(false)} className="flex-1">
+                  <Button variant="ghost" className="w-full h-12 flex items-center justify-center space-x-2">
+                    <Heart className="h-5 w-5" />
+                    <span>Wishlist</span>
+                    {mounted && wishlistItems.length > 0 && (
+                      <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {wishlistItems.length}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+                <Link href="/cart" onClick={() => setIsMenuOpen(false)} className="flex-1">
+                  <Button variant="ghost" className="w-full h-12 flex items-center justify-center space-x-2">
+                    <ShoppingCart className="h-5 w-5" />
+                    <span>Cart</span>
+                    {mounted && getTotalItems() > 0 && (
+                      <span className="bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {getTotalItems()}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+              </div>
+              {mounted && isAuthenticated ? (
+                <div className="flex flex-col space-y-2 w-full">
+                  <span className="text-sm text-gray-600">Hello, {user?.name || user?.email}</span>
+                  <Button
+                    onClick={() => {
+                      logout()
+                      setIsMenuOpen(false)
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex space-x-2 w-full">
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register" onClick={() => setIsMenuOpen(false)} className="flex-1">
+                    <Button size="sm" className="w-full">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

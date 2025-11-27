@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
 import { Eye, EyeOff, Mail } from 'lucide-react'
+import { useAuth } from '@/components/auth-provider'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
+  const { login } = useAuth()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -42,31 +44,38 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        // Store user data and token
-        localStorage.setItem('user_token', data.token)
-        localStorage.setItem('user_data', JSON.stringify(data.user))
-        
+      const success = await login(formData.email, formData.password)
+      
+      if (success) {
         toast({
           title: 'Success',
           description: 'Logged in successfully!'
         })
         
-        router.push(redirectTo)
+        // Check if user is admin and redirect accordingly
+        const userData = localStorage.getItem('user_data')
+        let redirectPath = redirectTo
+        
+        if (userData) {
+          try {
+            const user = JSON.parse(userData)
+            // Check if user email contains admin or is the admin email
+            if (user.email === 'admin@alldeals.com' || user.email.includes('admin')) {
+              redirectPath = '/admin/dashboard'
+            }
+          } catch (error) {
+            console.error('Error parsing user data:', error)
+          }
+        }
+        
+        // Add a small delay to ensure auth state is updated
+        setTimeout(() => {
+          router.push(redirectPath)
+        }, 100)
       } else {
         toast({
           title: 'Error',
-          description: data.error || 'Failed to log in',
+          description: 'Invalid email or password',
           variant: 'destructive'
         })
       }

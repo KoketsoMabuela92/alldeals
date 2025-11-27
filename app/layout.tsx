@@ -8,7 +8,6 @@ import { AdminPreviewBar } from '@/components/admin/admin-preview-bar'
 import { SettingsProvider } from '@/components/settings-provider'
 import { DynamicTitle } from '@/components/dynamic-title'
 import { SettingsDebug } from '@/components/settings-debug'
-import { ForceRefreshButton } from '@/components/force-refresh-button'
 import { AuthProvider } from '@/components/auth-provider'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -39,7 +38,6 @@ export default function RootLayout({
             </div>
             <Toaster />
             <SettingsDebug />
-            <ForceRefreshButton />
           </SettingsProvider>
         </AuthProvider>
       </body>

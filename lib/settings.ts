@@ -16,7 +16,7 @@ export interface AllSettings {
 
 // Default settings
 export const defaultSettings: AllSettings = {
-  store_name: 'AllDeals Pro',
+  store_name: 'AllDeals',
   store_description: 'Your one-stop shop for electronics, homeware, and gadgets at unbeatable prices.',
   contact_email: 'hello@alldeals.com',
   contact_phone: '+27 21 555 0123',

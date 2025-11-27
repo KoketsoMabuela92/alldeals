@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 // Simple settings without database dependency
 const defaultSettings = {
-  storeName: 'AllDeals Pro',
+  storeName: 'AllDeals',
   storeDescription: 'Your one-stop shop for electronics, homeware, and gadgets at unbeatable prices.',
   contactEmail: 'hello@alldeals.com',
   contactPhone: '+27 21 555 0123',
