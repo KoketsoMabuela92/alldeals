@@ -1,0 +1,201 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { toast } from '@/hooks/use-toast'
+import { Eye, EyeOff, Mail } from 'lucide-react'
+
+export default function LoginPage() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/'
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.email || !formData.password) {
+      toast({
+        title: 'Error',
+        description: 'Email and password are required',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Store user data and token
+        localStorage.setItem('user_token', data.token)
+        localStorage.setItem('user_data', JSON.stringify(data.user))
+        
+        toast({
+          title: 'Success',
+          description: 'Logged in successfully!'
+        })
+        
+        router.push(redirectTo)
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to log in',
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Link href="/" className="flex justify-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">AD</span>
+            </div>
+            <span className="text-2xl font-bold text-gray-900">AllDeals</span>
+          </div>
+        </Link>
+        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+          Sign in to your account
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Or{' '}
+          <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            create a new account
+          </Link>
+        </p>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <Label htmlFor="email">Email address</Label>
+              <div className="mt-1 relative">
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="pl-10"
+                  placeholder="john@example.com"
+                />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <div className="mt-1 relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="pr-10"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="text-sm">
+                <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                  Forgot your password?
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </Button>
+            </div>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Demo Accounts</span>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <p className="text-xs text-gray-600 text-center">
+                Use these demo accounts to test:
+              </p>
+              <div className="text-xs text-gray-500 space-y-1">
+                <div className="text-center">
+                  <strong>Customer:</strong> john.doe@example.com / password123
+                </div>
+                <div className="text-center">
+                  <strong>Admin:</strong> admin@alldeals.com / admin123
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

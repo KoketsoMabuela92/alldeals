@@ -1,0 +1,133 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET /api/settings - Get all settings or specific category
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get('category')
+    const key = searchParams.get('key')
+
+    let settings
+
+    if (key) {
+      // Get specific setting by key
+      const setting = await prisma.setting.findUnique({
+        where: { key }
+      })
+      return NextResponse.json({ setting })
+    } else if (category) {
+      // Get settings by category
+      settings = await prisma.setting.findMany({
+        where: { category }
+      })
+    } else {
+      // Get all settings
+      settings = await prisma.setting.findMany()
+    }
+
+    // Transform to key-value object for easier use
+    const settingsObject = settings.reduce((acc: any, setting) => {
+      let value = setting.value
+      
+      // Parse value based on type
+      switch (setting.type) {
+        case 'boolean':
+          value = setting.value === 'true' ? 'true' : 'false'
+          break
+        case 'number':
+          value = setting.value
+          break
+        case 'json':
+          try {
+            value = JSON.parse(setting.value)
+          } catch {
+            value = setting.value
+          }
+          break
+        default:
+          value = setting.value
+      }
+
+      acc[setting.key] = value
+      return acc
+    }, {})
+
+    return NextResponse.json({ settings: settingsObject })
+  } catch (error) {
+    console.error('Error fetching settings:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch settings' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST /api/settings - Create or update settings
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { settings } = body
+
+    if (!settings || typeof settings !== 'object') {
+      return NextResponse.json(
+        { error: 'Settings object is required' },
+        { status: 400 }
+      )
+    }
+
+    // Update or create each setting
+    const updatePromises = Object.entries(settings).map(async ([key, value]) => {
+      let stringValue: string
+      let type: string
+
+      // Determine type and convert to string
+      if (typeof value === 'boolean') {
+        stringValue = value.toString()
+        type = 'boolean'
+      } else if (typeof value === 'number') {
+        stringValue = value.toString()
+        type = 'number'
+      } else if (typeof value === 'object') {
+        stringValue = JSON.stringify(value)
+        type = 'json'
+      } else {
+        stringValue = String(value)
+        type = 'string'
+      }
+
+      // Determine category from key prefix
+      let category = 'general'
+      if (key.startsWith('store_')) category = 'store'
+      else if (key.startsWith('payment_')) category = 'payment'
+      else if (key.startsWith('notification_')) category = 'notification'
+      else if (key.startsWith('security_')) category = 'security'
+      else if (key.startsWith('appearance_')) category = 'appearance'
+
+      return prisma.setting.upsert({
+        where: { key },
+        update: {
+          value: stringValue,
+          type,
+          category
+        },
+        create: {
+          key,
+          value: stringValue,
+          type,
+          category
+        }
+      })
+    })
+
+    await Promise.all(updatePromises)
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error updating settings:', error)
+    return NextResponse.json(
+      { error: 'Failed to update settings' },
+      { status: 500 }
+    )
+  }
+}
