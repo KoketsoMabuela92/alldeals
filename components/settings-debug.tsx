@@ -25,8 +25,8 @@ export function SettingsDebug() {
       <div className="text-sm font-medium mb-2">Settings Debug</div>
       <div className="text-xs text-gray-600 mb-2">
         Store: {settings.store_name}<br/>
-        Email: {settings.store_email}<br/>
-        Phone: {settings.store_phone}
+        Email: {settings.contact_email}<br/>
+        Phone: {settings.contact_phone}
       </div>
       <Button 
         size="sm" 
