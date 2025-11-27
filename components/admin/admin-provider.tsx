@@ -26,13 +26,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Prevent multiple redirects
-      if (hasRedirected) return
-      
       const token = localStorage.getItem('user_token')
       
       if (!token) {
-        if (pathname !== '/login') {
+        if (pathname !== '/login' && !hasRedirected) {
           setHasRedirected(true)
           router.replace('/login')
         }
@@ -51,15 +48,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         if (response.ok) {
           const userData = await response.json()
           setUser(userData.user)
+          setHasRedirected(false) // Reset flag on successful auth
           
           if (pathname === '/login') {
-            setHasRedirected(true)
             router.replace('/admin/dashboard')
           }
         } else {
           localStorage.removeItem('user_token')
           localStorage.removeItem('user_data')
-          if (pathname !== '/login') {
+          if (pathname !== '/login' && !hasRedirected) {
             setHasRedirected(true)
             router.replace('/login')
           }
@@ -68,7 +65,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         console.error('Auth check failed:', error)
         localStorage.removeItem('user_token')
         localStorage.removeItem('user_data')
-        if (pathname !== '/login') {
+        if (pathname !== '/login' && !hasRedirected) {
           setHasRedirected(true)
           router.replace('/login')
         }
@@ -77,14 +74,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    checkAuth()
-  }, []) // Remove pathname and router from dependencies to prevent infinite loop
+    // Only run auth check once on mount
+    if (isLoading) {
+      checkAuth()
+    }
+  }, [isLoading]) // Only depend on isLoading to run once
 
   const logout = () => {
     localStorage.removeItem('user_token')
     localStorage.removeItem('user_data')
     setUser(null)
-    router.push('/login')
+    setHasRedirected(true) // Prevent auth check from running again
+    
+    // Small delay to ensure state is properly updated before redirect
+    setTimeout(() => {
+      router.replace('/login')
+    }, 100)
   }
 
   if (isLoading) {
