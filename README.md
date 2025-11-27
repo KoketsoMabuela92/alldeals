@@ -2,6 +2,8 @@
 
 A modern, responsive e-commerce platform built with Next.js 14, featuring electronics, homeware, and gadgets.
 
+**🚀 Deployed on Vercel with full authentication protection for checkout and wishlist!**
+
 ## 🚀 Features
 
 ### Core Functionality
